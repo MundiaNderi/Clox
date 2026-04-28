@@ -58,13 +58,13 @@ chunk->capacity: go to the memory address that chunk points to, and then access 
 
 #### Representing Values
 
-- how iur VM should represent values
+- how our VM should represent values
 - for now, we'll only support double-precision, floating point numbers(8 bytes(64-bit) computer data type used to represent a wide range of decimal values with high accuracy)
   - Sign Bit(1 bit) - determines if the number is positive or negative
   - Exponent(11 bits) - determines the magnitue(range) of the number
   - Significand/Fraction(52 explicit bits + 1 hidden bit) - Determines the precision
 
-For small sized fixed-values like integers, many instructions sets store bthe value directly i the code stream right after the opcode. These are called immediate instructions because the bits for the value are immediately after the opcode
+For small sized fixed-values like integers, many instructions sets store the value directly in the code stream right after the opcode. These are called immediate instructions because the bits for the value are immediately after the opcode
 
 For large or variable sized constants like strings, hat doesn't work. In a native compiler to machine code, those bigger snstants get stored in a separate "constant data" region in the binary executable. Then, the instruction to load a constant has an address or offset pointing to where the value is stored in that section.
 
@@ -91,3 +91,27 @@ In the chunk:
 
 - we store a separate array of integers that parallels the bytecode
 - Each number in the array is the line number for the corresponsing byte in the bytecode. When a runtime error occurs, we look up the line number at the same index as the current instruction's offset in the code array
+
+# An Instruction Execution Machine
+
+- We have a compiler that detects static errors and a VM that detects runtime errors
+- The first byte of any instruction is the opcode. Given a numeric opcode, we need to get to the right C code that implements that instruction's semantics. This process is called decoding or dispatching the instruction. We do that process for every single instructio, every single time one is executed, so this is the most perfomance critical part of the entire virtual machine.
+
+## A Value Stack Manipulator
+
+- The operands to an arithmetic operator need to be evaluated before we can perform the operation itself.
+  - C and Scheme leave evaluation order unspecified. Java specifies left-to-right evaluation like we did for Lox
+
+Our old jlox interpreter accomplishes this by recursively traversing the AST. It does a postorder traversal. In Cloc, our run() function is not recursive
+
+Since the temporary values we need to track naturally have stack like behaviour, our VM will use a stack to manage them. When an instruction "produces" a value, it pushes it onto the stack. When it needs to cinsume one or more values, it gets them by popping them off the stack.
+
+### The VM's Stack
+
+Stack-based interpreters aren't a silver bullet. They're adequate, but modern implementations of the JVM, the CLR, and JavaScript all use sophisticated just-in-time compilation pipelines to generate much faster native code on the fly.
+
+#### Stack tracing
+
+- Create some visibility into the stack - whenever we are tracing execution, we'll also show the current contents of the stack before we interpret each instruction
+
+- A binary operator takes two operands so it pops twice. It performs the operation on those two values and then pushes the result
