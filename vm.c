@@ -1,6 +1,7 @@
 // defines functions to create and tear down a virtual machine
 
 #include "common.h"
+#include "compiler.h"
 #include "debug.h"
 #include "vm.h"
 #include <stdio.h>
@@ -80,8 +81,8 @@ static InterpretResult run(){
     #undef BINARY_OP
 }
 
-InterpretResult interpret(Chunk* chunk){
-    vm.chunk = chunk;
-    vm.ip = vm.chunk->code;
-    return run(); // an nternal helper function that runs the bytecode instructions
+InterpretResult interpret(const char* source){
+    // Implementation for interpreting source code
+    compile(source);
+    return INTERPRET_OK;
 }

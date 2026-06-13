@@ -3,43 +3,80 @@
 #include "debug.h"
 #include "vm.h"
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+
+static void repl(){
+    char line[1024];
+    for(;;){
+        printf("> ");
+
+        if(!fgets(line, sizeof(line), stdin)){
+            printf("\n");
+            break;
+        }
+
+        interpret(line);
+    }
+}
+
+static char* readFile(const char* path){
+    // open the file in binary mode ("rb") to ensure that file is read as is
+    FILE* file = fopen(path, "rb");
+
+    if (file == NULL) {
+        fprintf(stderr, "Could not open file \"%s\".\n", path);
+        exit(74);
+    }
+
+    // seek the file to the very end using fseek then use ftell to tell us how many bytes we are from the start of the file
+    // that tells us the size of the file in bytes, then we rewind back to the beginning so that we can read the whole file in a single batch
+    fseek(file, 0L, SEEK_END);
+    size_t fileSize = ftell(file);
+    rewind(file);
+
+    char* buffer = (char*)malloc(fileSize + 1);
+
+    if (buffer == NULL){
+        fprintf(stderr, "Not enough memory to read \"%s\".\n", path);
+        exit(74);
+    }
+    size_t bytesRead = fread(buffer, sizeof(char), fileSize, file);
+
+    if (bytesRead < fileSize){
+        fprintf(stderr, "Could not read file \"%s\".\n", path);
+        exit(74);
+    }
+    buffer[bytesRead] = '\0';
+
+    fclose(file);
+    return buffer;
+}
+
+static void runFile(const char*path){
+    char* source = readFile(path);
+    InterpretResult result = interpret(source);
+    free(source);
+
+    if (result == INTERPRET_COMPILE_ERROR) exit(65);
+    if (result == INTERPRET_RUNTIME_ERROR) exit(70);
+}
+
+
+
 int main(int argc, const char* argv[]) {
-    // 1.2 + 3.4 * -5.6
-    // initialise the  virtual machine and an empty chunk of bytecode
     initVM();
-    Chunk chunk;
-    initChunk(&chunk);
 
-    // 1.2
-    int constant = addConstant(&chunk, 1.2);
-    writeChunk(&chunk, OP_CONSTANT, 123);
-    writeChunk(&chunk, constant, 123);
-
-    // 3.4
-    constant = addConstant(&chunk, 3.4);
-    writeChunk(&chunk, OP_CONSTANT, 123);
-    writeChunk(&chunk, constant, 123);
-
-    // 1.2 + 3.4
-    writeChunk(&chunk, OP_ADD, 123);
-
-    // 5.6
-    constant = addConstant(&chunk, 5.6);
-    writeChunk(&chunk, OP_CONSTANT, 123);
-    writeChunk(&chunk, constant, 123);
-
-    // (1.2 + 3.4) * 5.6
-    writeChunk(&chunk, OP_MULTIPLY, 123);
-
-    // negate: -(1.2 + 3.4) * 5.6
-    writeChunk(&chunk, OP_NEGATE, 123);
-
-    writeChunk(&chunk, OP_RETURN, 123);
-
-    disassembleChunk(&chunk, "test chunk");
-    interpret(&chunk);
-
+    if (argc == 1){ // if no arguments are provided, start the REPL (Read-Eval-Print Loop) which allows users to enter and execute code interactively
+        repl();
+    } else if (argc == 2){
+        runFile(argv[1]);
+    } else {
+        fprintf(stderr, "Usage: clox [path]\n");
+        exit(64);
+    }
     freeVM();
-    freeChunk(&chunk);
     return 0;
 }
