@@ -53,3 +53,11 @@ dkms.conf
 
 # debug information files
 *.dwo
+
+# Project specific
+clox
+compile_commands.json
+
+# macOS
+.DS_Store
+.cache/
