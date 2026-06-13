@@ -66,7 +66,7 @@ dmalloc is a boundary tag allocator:
 
 - Memory is allocated as chunks: 8 byte aligned structures containing a header and usable memory
 - Allocated chunks have an 8 or 16 byte overhead storing the chunk size usage flags.
-- Unallocated chunks additionally store pointers to other free chunks in what would be the usable sapce, making the minimum chunk size 16 bytes on 32 bits and 24-32 bytes on 64 bits.
+- Unallocated chunks additionally store pointers to other free chunks in what would be the usable space, making the minimum chunk size 16 bytes on 32 bits and 24-32 bytes on 64 bits.
 - Free chunks store size information both before and after the chunk: boundary tags at both ends. This allows the heap to be traversed from any known chunk, enabling very fast coalescing of adjacent free chunks
 
 ## The bin system
