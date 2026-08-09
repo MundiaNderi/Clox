@@ -160,3 +160,42 @@ In C that would require a lot of work: We'd need some sort of union and type tag
 Our keyword tree is exactly a DFA that recognizes Lox keywords. DFAs are more powerful than simple trees because they can be arbitrary graphs.
 
 - Transitions can form cycles between states. That lets you recognize arbitrarily long strings.
+
+# Compiling Expressions
+
+- Provides the final segment of our VM's execution pipeline
+- Our compiler:
+  - parses source code and outputs a low level series of binary instructions
+  - it
+    s bytecode and not some chip's native instruction set
+  - Favourite algorithm: Vaughan's Pratt's: Top down operator precedence parsing
+    - gracefully handles prefix operators, postfix, infix, misfix, and any kind of -fix
+
+## Single-Pass Compilation
+
+- A parser produces an AST
+  A code generator traverses the AST and outputs target code.
+- In Clox, we're merging these two passes into one
+- Single pass compilers like we're going to build don't work well for all languages
+
+### Emitting Bytecode
+
+- Parse a user's program -> then translate into a series of bytecode instructions
+
+### Parsing Prefix Expressions
+
+- What is the code in the middle that connects the parsing and the code generation utility functions.
+
+![Parsing prefix expressions](./images/Prefix%20Expressions.png)
+
+### Parenthesis for grouping
+
+prefix expressions - expressions that start with a particular token
+Unary minus is also a prefix expression
+
+- Unary operators have pretty high precedence and that correctly excludes things like binary operators.
+
+### Parsing Infinix Expressions
+
+ie Binary Operators -> 1 + 2
+assignment is right associative
